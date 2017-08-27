@@ -7,26 +7,22 @@ var {User} = require('./models/user');
 
 var app = express();
 
-app.use(bodyParser.json()); //middleware we need to give
+app.use(bodyParser.json());
 
-//Create, Update, Remove => POST
-//Read => GET
-app.post('/todos', (req, res) => { //For resource creation
-  // console.log(req.body);
+app.post('/todos', (req, res) => {
   var todo = new Todo({
     text: req.body.text
   });
+
   todo.save().then((doc) => {
     res.send(doc);
-  }, (err) => {
-    res.status(400).send(err);
+  }, (e) => {
+    res.status(400).send(e);
   });
 });
 
 app.listen(3000, () => {
-  console.log(`Server is running on port 3000`);
+  console.log('Started on port 3000');
 });
 
-module.exports = {
-  app
-};
+module.exports = {app};

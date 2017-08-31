@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var express = require('express');
 var bodyParser = require('body-parser');
 var {ObjectId} = require('mongodb');
@@ -11,6 +12,7 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
+// POST /todos
 app.post('/todos', (req, res) => {
   var todo = new Todo({
     text: req.body.text
@@ -23,6 +25,7 @@ app.post('/todos', (req, res) => {
   });
 });
 
+// GET /todos
 app.get('/todos', (req, res) => {
   Todo.find().then((todos) => {
     res.send({
@@ -48,6 +51,7 @@ app.get('/todos/:id', (req, res) => {
   }).catch((err) => res.status(400).send());
 });
 
+// DELETE /todos/:id
 app.delete('/todos/:id', (req, res) => {
   var id = req.params.id;
   if (!ObjectId.isValid(id)) {
@@ -59,6 +63,35 @@ app.delete('/todos/:id', (req, res) => {
     }
     res.send({todo});
   }).catch((err) => res.status(400).send());
+});
+
+// PATCH /todos
+app.patch('/todos/:id', (req, res) => {
+    var id = req.params.id;
+    var body = _.pick(req.body, ['text', 'completed']); //Pick only the things a user cam update
+
+    //Verify id
+    if (!ObjectId.isValid(id)) {
+      return res.status(404).send();
+    }
+
+    //Check completed value and set completedAt
+    if (_.isBoolean(body.completed) && body.completed) {
+      //Is boolean and is true
+      body.completedAt = new Date().getTime();
+    } else {
+      //Not a boolean or it's not true
+      body.completed = false;
+      body.completedAt = null;
+    }
+    Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+      if (!todo) {
+        return res.status(404).send();
+      }
+      res.send({todo});
+    }).catch((err) => {
+      res.status(400).send();
+    })
 });
 
 app.listen(port, () => {
